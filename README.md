@@ -1,2 +1,5 @@
 # cartpole-q-learning
-Solve cartpole on OpenAI Gym by simple q-learning algorithm
+
+Solve CartPole environment on OpenAI Gym by simple q-learning algorithm
+
+![q-learning.PNG](q-learning.PNG)
