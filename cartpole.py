@@ -1,4 +1,5 @@
 import os
+import math
 import argparse
 import gym
 from agent import Q, Agent, Trainer
@@ -7,21 +8,29 @@ from agent import Q, Agent, Trainer
 RECORD_PATH = os.path.join(os.path.dirname(__file__), "./upload")
 
 
-def create_cartpole_agent():
-    env = gym.make("CartPole-v0")
-    q = Q(env.action_space.n, env.observation_space, bin_size=7, low_bound=-5, high_bound=5)
-    agent = Agent(q, epsilon=0.05)
-    return env, agent
-
-
 def main(episodes, render, monitor):
-    env, agent = create_cartpole_agent()
     if monitor:
         env.monitor.start(RECORD_PATH)
+    
+    env = gym.make("CartPole-v0")
+    q = Q(
+        env.action_space.n, 
+        env.observation_space, 
+        bin_size=[3, 3, 8, 5],
+        low_bound=[None, -0.5, None, -math.radians(50)], 
+        high_bound=[None, 0.5, None, math.radians(50)]
+        )
+    agent = Agent(q, epsilon=0.05)
 
-    trainer = Trainer(agent, learning_rate=1.0, initial_exploration=1000, initial_epsilon=1.0, epsilon_decay=0.001)
+    learning_decay = lambda lr, t: max(0.1, min(0.5, 1.0 - math.log10((t + 1) / 25)))
+    epsilon_decay = lambda eps, t: max(0.01, min(1.0, 1.0 - math.log10((t + 1) / 25)))
+    trainer = Trainer(
+        agent, 
+        learning_rate=0.5, learning_rate_decay=learning_decay, 
+        epsilon=1.0, epsilon_decay=epsilon_decay,
+        max_step=250)
+
     trainer.train(env, episode_count=episodes, render=render)
-    print("solved!" if trainer.solved else "not solved...")
 
     if monitor:
         env.monitor.close()
