@@ -63,13 +63,14 @@ class Agent():
 
 class Trainer():
 
-    def __init__(self, agent, learning_rate=0.1, gamma=0.95, initial_exploration=0.3, initial_epsilon=1, epsilon_decay=1e-6):
+    def __init__(self, agent, learning_rate=1, gamma=0.95, initial_exploration=0.3, initial_epsilon=1, epsilon_decay=1e-6):
         self.agent = agent
         self.learning_rate = learning_rate
         self.gamma = gamma
         self.initial_exploration = initial_exploration
         self.initial_epsilon = initial_epsilon
         self.epsilon_decay = epsilon_decay
+        self.solved = False
 
     def train(self, env, episode_count, render=False):
         exploration = self.initial_exploration if isinstance(self.initial_exploration, int) else int(episode_count * self.initial_exploration)
@@ -79,6 +80,8 @@ class Trainer():
         default_epsilon = self.agent.epsilon
         self.agent.epsilon = self.initial_epsilon
         values = []
+        steps = deque(maxlen=100)
+        lr = self.learning_rate
         for i in range(episode_count):
             obs = env.reset()
             step = 0
@@ -94,14 +97,20 @@ class Trainer():
                 state = self.agent.q.observation_to_state(obs)
                 future = 0 if done else np.max(self.agent.q.values(next_obs))
                 value = self.agent.q.table[state][action]
-                self.agent.q.table[state][action] += self.learning_rate * (reward + self.gamma * future - value)
+                self.agent.q.table[state][action] += lr * (reward + self.gamma * future - value)
         
                 obs = next_obs
                 values.append(value)
                 step += 1
             else:
                 mean = np.mean(values)
-                print("Episode {} finished after {} steps. epsilon={:.3f}, mean q value={:.3f}".format(i, step, self.agent.epsilon, mean))
+                steps.append(step)
+                mean_step = np.mean(steps)
+                print("Episode {}: {}steps(avg{}). epsilon={:.3f}, lr={:.3f}, mean q value={:.2f}".format(i, step, mean_step, self.agent.epsilon, lr, mean))
                 self.agent.epsilon -= self.epsilon_decay
                 if i > exploration or self.agent.epsilon < default_epsilon:
                     self.agent.epsilon = default_epsilon
+                if i > exploration:
+                    lr = self.learning_rate / ((i - exploration + 1) ** 0.5)
+                if mean_step > 200:
+                    self.solved = True
