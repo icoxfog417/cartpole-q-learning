@@ -9,10 +9,8 @@ RECORD_PATH = os.path.join(os.path.dirname(__file__), "./upload")
 
 
 def main(episodes, render, monitor):
-    if monitor:
-        env.monitor.start(RECORD_PATH)
-    
-    env = gym.make("CartPole-v0")
+    env = gym.make("CartPole-v0") 
+
     q = Q(
         env.action_space.n, 
         env.observation_space, 
@@ -29,6 +27,9 @@ def main(episodes, render, monitor):
         learning_rate=0.5, learning_rate_decay=learning_decay, 
         epsilon=1.0, epsilon_decay=epsilon_decay,
         max_step=250)
+
+    if monitor:
+        env.monitor.start(RECORD_PATH)
 
     trainer.train(env, episode_count=episodes, render=render)
 
