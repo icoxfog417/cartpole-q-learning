@@ -98,7 +98,6 @@ class Trainer():
             obs = env.reset()
             step = 0
             done = False
-
             while not done:
                 if render:
                     env.render()
@@ -110,7 +109,7 @@ class Trainer():
                 future = 0 if done else np.max(self.agent.q.values(next_obs))
                 value = self.agent.q.table[state][action]
                 self.agent.q.table[state][action] += lr * (reward + self.gamma * future - value)
-        
+
                 obs = next_obs
                 values.append(value)
                 step += 1

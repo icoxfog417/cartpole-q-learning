@@ -24,6 +24,7 @@ def main(episodes, render, monitor):
     epsilon_decay = lambda eps, t: max(0.01, min(1.0, 1.0 - math.log10((t + 1) / 25)))
     trainer = Trainer(
         agent, 
+        gamma=0.99,
         learning_rate=0.5, learning_rate_decay=learning_decay, 
         epsilon=1.0, epsilon_decay=epsilon_decay,
         max_step=250)
